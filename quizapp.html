@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Quiz Application</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #f4f4f4;
+            background-image: url("bg2.jpg");
+        }
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.327);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(6, 6, 6, 0.1);
+        }
+        .question {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .options {
+            list-style: none;
+            padding: 0;
+        }
+        .options li {
+            margin-bottom: 10px;
+        }
+        .options li button {
+            width: 100%;
+            padding: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .options li button:hover {
+            background-color: #f1f1f1;
+        }
+        .feedback {
+            font-size: 1.1em;
+            margin-top: 20px;
+        }
+        .next-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+        }
+        .next-button:hover {
+            background-color: #0056b3;
+        }
+        .scoreboard {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <h1><bold>Online Quiz Application</bold></h1>
+    <div class="container">
+        <div id="quiz">
+            <div id="question" class="question"></div>
+            <ul id="options" class="options"></ul>
+            <div id="feedback" class="feedback"></div>
+            <button id="nextButton" class="next-button" style="display: none;">Next Question</button>
+        </div>
+        <div id="scoreboard" class="scoreboard">Score: 0</div>
+    </div>
+
+    <script>
+        const apiEndpoint = 'https://opentdb.com/api.php?amount=10&type=multiple';
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchQuestions();
+            document.getElementById('nextButton').addEventListener('click', loadNextQuestion);
+        });
+
+        function fetchQuestions() {
+            fetch(apiEndpoint)
+                .then(response => response.json())
+                .then(data => {
+                    questions = data.results;
+                    displayQuestion();
+                });
+        }
+
+        function displayQuestion() {
+            const questionElement = document.getElementById('question');
+            const optionsElement = document.getElementById('options');
+            const feedbackElement = document.getElementById('feedback');
+            const nextButton = document.getElementById('nextButton');
+
+            feedbackElement.innerHTML = '';
+            nextButton.style.display = 'none';
+
+            const question = questions[currentQuestionIndex];
+            const options = [...question.incorrect_answers, question.correct_answer].sort(() => Math.random() - 0.5);
+
+            questionElement.innerHTML = question.question;
+            optionsElement.innerHTML = '';
+
+            options.forEach(option => {
+                const li = document.createElement('li');
+                const button = document.createElement('button');
+                button.innerHTML = option;
+                button.addEventListener('click', () => checkAnswer(option, question.correct_answer));
+                li.appendChild(button);
+                optionsElement.appendChild(li);
+            });
+        }
+
+        function checkAnswer(selectedOption, correctAnswer) {
+            const feedbackElement = document.getElementById('feedback');
+            const nextButton = document.getElementById('nextButton');
+
+            if (selectedOption === correctAnswer) {
+                feedbackElement.innerHTML = 'Correct!';
+                feedbackElement.style.color = 'green';
+                score++;
+            } else {
+                feedbackElement.innerHTML = `Wrong! The correct answer is: ${correctAnswer}`;
+                feedbackElement.style.color = 'red';
+            }
+
+            updateScoreboard();
+            nextButton.style.display = 'block';
+        }
+
+        function loadNextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                displayQuestion();
+            } else {
+                const quizElement = document.getElementById('quiz');
+                quizElement.innerHTML = '<h2>You have completed the quiz!</h2>';
+            }
+        }
+
+        function updateScoreboard() {
+            const scoreboardElement = document.getElementById('scoreboard');
+            scoreboardElement.innerHTML = `Score: ${score}`;
+        }
+    </script>
+</body>
+</html>
